@@ -5,14 +5,28 @@ const request = require('supertest');
 const {app} = require('./../server'); // server = server.js
 const {Todo} = require('./../models/todos');
 
-// Assuming the database is empty! So we need to set before each - empty database
-beforeEach((done)=>{ // Will remove all data from database before each test. before each "it"
+// // Assuming the database is empty! So we need to set before each - empty database
+// beforeEach((done)=>{ // Will remove all data from database before each test. before each "it"
+//   Todo.remove({}).then(()=>{
+//     done();
+//   })
+// })
+
+const todos = [{
+  text: "First test todo"
+}, {
+  text: "second test todo"
+}];
+// SOem tests need to have data in database, so we build here a known to us database
+beforeEach((done)=>{
   Todo.remove({}).then(()=>{
-    done();
-  })
-})
+    return Todo.insertMany(todos);
+  }).then(()=>done());
+});
+
+
 describe('Post / todos' , ()=>{
-  it('shhould create a new todo' , (done)=>{
+  it('should create a new todo' , (done)=>{
     var text = 'Test todo test';
 
     request(app)
@@ -27,7 +41,7 @@ describe('Post / todos' , ()=>{
           return done(err); // return doesnt do any thing, just stops the function
         }
 
-        Todo.find().then((todos)=>{ // Brings back an array with all the todos
+        Todo.find({text}).then((todos)=>{ // Brings back an array with all the todos
           expect(todos.length).toBe(1); // We added only one todo, so length should be 1
           expect(todos[0].text).toBe(text); // Checks that the texts are matching
           done(); // Will pass the tests any way, that's why i need to add a catch
@@ -51,12 +65,24 @@ describe('Post / todos' , ()=>{
         }
 
         Todo.find().then((todos)=>{ // Brings back an array with all the todos
-          expect(todos.length).toBe(0); // We added only one todo, so length should be 0
+          expect(todos.length).toBe(2); // We added only one todo, so length should be 0 - new test - known data base - 2
           done(); // Will pass the tests any way, that's why i need to add a catch
         }).catch((e)=>{
           done(e);
         }); // ftching all the todos
 
       })
+  });
+
+  describe('Get / todos' , ()=>{
+    it('Should get all todos' , (done)=>{
+      request(app)
+        .get('/todos')
+        .expect(200) // checking whatcomes back
+        .expect((res)=>{ // expecting something about the body - async
+            expect(res.body.todos.length).toBe(2);
+        })
+        .end(done); // No need to give here a function like above, because nothing here is esynchronize
+    })
   });
 });
