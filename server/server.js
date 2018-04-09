@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todos');
 var {User} = require('./models/users');
+const {ObjectID} = require('mongodb');
 
 var app = express();
 
@@ -35,6 +36,23 @@ app.get('/todos', (req,res)=>{
     });
   }, (e)=>{
     res.status(400).send(e);
+  })
+})
+
+// Chalange - get by id
+app.get('/todos/:id', (req,res)=>{
+  var id = req.params.id;
+  if (!ObjectID.isValid(id))
+      return res.status(404).send();
+
+  Todo.findById(id).then((todos)=>{
+    if (!todos)
+      return res.status(404).send();
+    res.send({
+      todos // It's got not sending todos as an array! we send it as an object, and in the future we can work with it.
+    });
+  }, (e)=>{
+    res.status(400).send();
   })
 })
 
