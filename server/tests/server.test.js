@@ -4,7 +4,7 @@ const request = require('supertest');
 
 const {app} = require('./../server'); // server = server.js
 const {Todo} = require('./../models/todos');
-
+const {ObjectID} = require('mongodb');
 // // Assuming the database is empty! So we need to set before each - empty database
 // beforeEach((done)=>{ // Will remove all data from database before each test. before each "it"
 //   Todo.remove({}).then(()=>{
@@ -13,8 +13,10 @@ const {Todo} = require('./../models/todos');
 // })
 
 const todos = [{
+  _id : new ObjectID(), // Adding manually id's to we can test Get todo/id
   text: "First test todo"
 }, {
+  _id : new ObjectID(),
   text: "second test todo"
 }];
 // SOem tests need to have data in database, so we build here a known to us database
@@ -85,4 +87,30 @@ describe('Post / todos' , ()=>{
         .end(done); // No need to give here a function like above, because nothing here is esynchronize
     })
   });
+});
+
+describe("GET /todos/id" , ()=>{
+  it('Should return todo doc', (done)=>{
+    request(app)
+      .get(`/todos/${todos[0]._id.toHexString()}`)
+      .expect(200)
+      .expect((res)=>{
+        expect(res.body.todos.text).toBe(todos[0].text);
+      })
+      .end(done);
+  });
+  it('Should return 404 if to do not found', (done)=>{
+    var id = new ObjectID();
+    request(app)
+      .get(`/todos/${id.toHexString()}`)
+      .expect(404)
+      .end(done);
+  })
+  it('Should return 404 if non-object ids', (done)=>{
+    var id = '123';
+    request(app)
+      .get(`/todos/${id}`)
+      .expect(404)
+      .end(done);
+  })
 });
