@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 // Confuguring the database
 mongoose.Promise = global.Promise;
-mongoose.connect(process.env.MONDODB_URI || 'mongodb://localhost:27017/TodoApp');
+mongoose.connect(process.env.MONDODB_URI);
 
 module.exports ={
   mongoose
