@@ -114,3 +114,41 @@ describe("GET /todos/id" , ()=>{
       .end(done);
   })
 });
+
+// Tesing delete
+describe("Delete /todos/id" , ()=>{
+  it('Should remove a todo doc', (done)=>{
+    var hexId = todos[1]._id.toHexString();
+    request(app)
+      .delete(`/todos/${hexId}`) // Deleting the secod todo iteam
+      .expect(200)
+      .expect((res)=>{
+        expect(res.body.todos._id).toBe(hexId);
+      })
+      .end((err,res)=>{
+        if (err){
+          return done(err);
+        }
+        Todo.findById(hexId).then((todos)=>{ // Brings back an array with all the todos
+          expect(todos).toNotExist();
+          done(); // Will pass the tests any way, that's why i need to add a catch
+        }).catch((e)=>{
+          done(e);
+        }); // ftching all the todos
+      });
+  });
+  it('Should return 404 if to do not found', (done)=>{
+    var id = new ObjectID();
+    request(app)
+      .delete(`/todos/${id.toHexString()}`)
+      .expect(404)
+      .end(done);
+  })
+  it('Should return 404 if non-object ids', (done)=>{
+    var id = '123';
+    request(app)
+      .delete(`/todos/${id}`)
+      .expect(404)
+      .end(done);
+  })
+});
