@@ -1,13 +1,13 @@
 // External imports
-var express = require('express');
-var bodyParser = require('body-parser');
-
-
+const express = require('express');
+const bodyParser = require('body-parser');
+const _ = require('lodash');
+const {ObjectID} = require('mongodb');
 // local imports
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todos');
 var {User} = require('./models/users');
-const {ObjectID} = require('mongodb');
+
 
 var app = express();
 const port = process.env.PORT || 3000 ;
@@ -73,6 +73,31 @@ app.delete('/todos/:id', (req,res)=>{
     res.status(400).send();
   })
 })
+
+//Update by id - a bit harder - need to check the request from the user and update the right values
+app.patch ('/todos/:id', (req,res)=>{
+    var id = req.params.id;
+    var body = _.pick(req.body , ['text'  , 'completed']); // choosing the values the uuser can upadte- not all. pulling of array of properties if they exsists
+
+    if (!ObjectID.isValid(id))
+        return res.status(404).send();
+
+    if(_.isBoolean(body.completed) && body.completed){
+        body.completedAt = new Date().getTime();
+    } else {
+      body.completed = false;
+      body.completedAt = null;
+    }
+
+    Todo.findByIdAndUpdate(id , {$set : body}, {new: true}).then((todo)=>{ //$set and new are mongoo values that I have to use
+      if (!todo)
+        return res.status(404).send();
+
+      res.send({todo});
+    }).catch((e)=>{
+      return res.status(400).send();
+    });
+});
 
 app.listen(port , ()=>{
   console.log(`Started on port ${port}`);
