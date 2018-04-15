@@ -1,3 +1,5 @@
+require('./config/config'); // require just "calls" code from another file. I could actually just take the whole code from all the files and put it in one js file and everything would still work- like - import actually
+//config - configuring the process.env.NODE_ENV enviorment variable to work with the right database
 // External imports
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -10,7 +12,7 @@ var {User} = require('./models/users');
 
 
 var app = express();
-const port = process.env.PORT || 3000 ;
+const port = process.env.PORT; //|| 3000 ; - no need because we configed it in the begining
 
 app.use(bodyParser.json()); // can Send json to our app now
 // Crud - creat ,read , update and delete
