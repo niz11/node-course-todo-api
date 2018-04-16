@@ -101,6 +101,24 @@ app.patch ('/todos/:id', (req,res)=>{
     });
 });
 
+// Creat new user
+app.post('/users', (req,res)=>{
+  var body = _.pick(req.body , ['email'  , 'password']);
+  var user = new User(body);
+
+  user.save().then(()=>{
+    return user.generateAuthToken(); // we know generateAuthToken will chain a callback function
+    //res.send(user);
+  }).then((token)=>{ // now we have the user and the token and we can make the response
+    res.header('x-auth', token).send(user); //Sends the token back as an http response header. header(key , value). x-auth - creates a custome header. Using here hwd token steame. This is the authentication that the user need to send in order to make a new todo
+  }).catch((e) =>{
+    res.status(400).send(e);
+  });
+
+// // If I send a post usl from user, I'll get in the termial what json file I wrote and sent in postman
+//   console.log(req.body);
+});
+
 app.listen(port , ()=>{
   console.log(`Started on port ${port}`);
 });
