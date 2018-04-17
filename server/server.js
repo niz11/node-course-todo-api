@@ -7,8 +7,9 @@ const _ = require('lodash');
 const {ObjectID} = require('mongodb');
 // local imports
 var {mongoose} = require('./db/mongoose');
-var {Todo} = require('./models/todos');
-var {User} = require('./models/users');
+var {Todo} = require('./models/todo');
+var {User} = require('./models/user');
+var {authenticate} = require('./middleware/authenticate');
 
 
 var app = express();
@@ -109,7 +110,7 @@ app.post('/users', (req,res)=>{
   user.save().then(()=>{
     return user.generateAuthToken(); // we know generateAuthToken will chain a callback function
     //res.send(user);
-  }).then((token)=>{ // now we have the user and the token and we can make the response
+  }).then((token) => { // now we have the user and the token and we can make the response
     res.header('x-auth', token).send(user); //Sends the token back as an http response header. header(key , value). x-auth - creates a custome header. Using here hwd token steame. This is the authentication that the user need to send in order to make a new todo
   }).catch((e) =>{
     res.status(400).send(e);
@@ -117,6 +118,24 @@ app.post('/users', (req,res)=>{
 
 // // If I send a post usl from user, I'll get in the termial what json file I wrote and sent in postman
 //   console.log(req.body);
+});
+
+//Starting here private routes
+//This route require authentication - then send user back
+// app.get('users/me', (req, res) => {
+//   var token = req.header('x-auth'); // like res.header, only that we're only getting the value - need to send the x-auth style with
+//   //Verifing - user is coming back from the callback function in users.js
+//   User.findByToken(token).then((user) => {
+//     if(!user){
+//
+//     }
+//
+//     //succsess case -
+//     res.send(user);
+//   });
+// });
+app.get('/users/me', authenticate, (req, res) => {
+  res.send(req.user);
 });
 
 app.listen(port , ()=>{

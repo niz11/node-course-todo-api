@@ -39,7 +39,7 @@ UserSchema.methods.toJSON = function (){
   return _.pick(userObject,['_id', 'email']); //picking the values we want to return from the array
 }
 
-// module methods - Called on the User object -- User.findByToken - castume modul we will create
+// module methods -need to call UserSchema.statics - Called on the User object -- User.findByToken - castume modul we will create
 // instens methods - called on individual user - like - var user = new User(); --> called on user.generateAuthToken -- ading token to inde user
 //Creating a method -
 UserSchema.methods.generateAuthToken = function () {
@@ -50,6 +50,29 @@ UserSchema.methods.generateAuthToken = function () {
   user.tokens = user.tokens.concat([{access,token}]);  //local changed
   return user.save().then(()=>{ //saving in database , and adding to it an error function - user.save return a promise
     return token; // returning a value - instead of a promise - the token will be sent as a succsess argument to the next then call
+  });
+};
+
+//Module method building here - finding user by token
+
+UserSchema.statics.findByToken = function (token){
+  var User = this;
+  var decoded;
+  try{
+    decoded = jwt.verify(token, 'Niz1'); // Putting it in try catch block because if the values doesn't match the jwt.verify throughs an error
+  } catch(e){
+    // return new Promise((res,rej) =>  {
+    //    reject()
+    //}) = 
+    return Promise.reject();
+  }
+
+  //Adding a return so we can chain functoins, and add a then function to the call of FindByToken call in server.js
+  //Down below is the succsess case handel - quering the token array for the values
+  return User.findOne({
+    '_id': decoded._id,
+    'tokens.token': token,
+    'tokens.access': 'auth'
   });
 };
 
