@@ -38,15 +38,30 @@
 
 const {SHA256}= require('crypto-js');
 const   jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 var data = {
   id:10
 }
 
 var token = jwt.sign(data, 'Mysecret'); // What we send to the user when they sign in - and we also store it in the database in user under tokens
-console.log(token); // Sign that the data was not mnipulated
+//console.log(token); // Sign that the data was not mnipulated
 // Can take a look at jwt.io - Shows us the hash when we copy it from terminal -decoding - When secret is right - then signature is varified
 var decoded = jwt.verify(token,'Mysecret'); // The secret has to musch!
-console.log(decoded);
+//console.log(decoded);
 
 // If signature is invalid- we will get an error
+var password = '123abc';
+var hashpass = "$2a$10$gH9BZOPiMVURYS851FMyfOu6/bOAHD.D5HyQOR8j9j/P5RBCmNRw2"
+//Salting a password is very important - so the hash answer will always be different
+// salt is build in in the module
+// bcrypt.genSalt(10 , (err,salt)=>{
+//   bcrypt.hash(password,salt, (err , hash)=>{ //  we don't want to store the password, we want to store the hash in our database
+//     //console.log(hash);
+//   })
+// }) // The number - to prevent users from making to much request => hackers who try to find the right hash.
+// Copare hash value and the original value - rerun true here - the res has the answer
+bcrypt.compare(password, hashpass, (err , res) =>{
+  console.log(res);
+});
+// How to verify a user? he sends his password and we chek with bcrypt.compare if it's muches the hash we saved in database

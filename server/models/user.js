@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 const validator = require('validator');
 const   jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 // Here staring usuing Schema - before the object User was defined inside the moongose.models
 var UserSchema = new mongoose.Schema({
   email: {
@@ -63,7 +64,7 @@ UserSchema.statics.findByToken = function (token){
   } catch(e){
     // return new Promise((res,rej) =>  {
     //    reject()
-    //}) = 
+    //}) =
     return Promise.reject();
   }
 
@@ -75,6 +76,21 @@ UserSchema.statics.findByToken = function (token){
     'tokens.access': 'auth'
   });
 };
+// Events that will happen before saving the data in the database - here hashing the password
+UserSchema.pre('save', function (next){ // The regular function let us access the this object and next to end the call
+  var user = this;
+
+  if (user.isModified('password')){ // will return true only when the user changes the password! - important to avoid double hashing
+    bcrypt.genSalt(10 , (err,salt)=>{
+      bcrypt.hash(user.password,salt, (err , hash)=>{ //  we don't want to store the password, we want to store the hash in our database
+        user.password = hash; // Will save the hash value! in our database
+        next();
+      })
+    })
+  } else {
+    next();
+  }
+})
 
 // Spec the models
 var User = mongoose.model('User',UserSchema);
