@@ -67,13 +67,31 @@ UserSchema.statics.findByToken = function (token){
     //}) =
     return Promise.reject();
   }
-
   //Adding a return so we can chain functoins, and add a then function to the call of FindByToken call in server.js
   //Down below is the succsess case handel - quering the token array for the values
   return User.findOne({
     '_id': decoded._id,
     'tokens.token': token,
     'tokens.access': 'auth'
+  });
+};
+
+UserSchema.statics.findByCredentials = function (email, password){
+  var User = this;
+//First look for the email , exist?  if pass fits, doesn't fit? return an error
+  return User.findOne({email}).then((user) =>{
+    if(!user)
+      return Promise.reject();
+
+    // bcrypt works only with callbacks , that's why we have to use here a promise (Since we only using here promises)
+    return new Promise( (resolve, reject) =>{
+      bcrypt.compare(password, user.password, (err , res) =>{
+        if (!res)
+          reject();
+        else
+          resolve(user);
+      });
+    });
   });
 };
 // Events that will happen before saving the data in the database - here hashing the password

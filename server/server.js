@@ -10,6 +10,8 @@ var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 var {authenticate} = require('./middleware/authenticate');
+const   jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 
 var app = express();
@@ -136,6 +138,20 @@ app.post('/users', (req,res)=>{
 // });
 app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
+});
+
+app.post('/users/me/login' , (req,res) => {
+  // var email = req.body.email;
+  // var pass = req.body.password;
+  var body = _.pick(req.body, ['email', 'password']);
+
+  User.findByCredentials(body.email,body.password).then((user) =>{ //findByCredentials is difeined inside user.js file. catch will be called if pass is wrong or email doesn't exsist - error
+    return user.generateAuthToken().then((token) =>{ // return to keep the chain of callbacks alive
+      res.header('x-auth', token).send(user); //Sends the user back as I did before, only nicer
+    })
+  }).catch((e) => {
+    res.status(400).send();
+  });
 });
 
 app.listen(port , ()=>{
