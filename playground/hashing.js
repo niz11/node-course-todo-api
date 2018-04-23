@@ -55,11 +55,11 @@ var password = '123abc';
 var hashpass = "$2a$10$gH9BZOPiMVURYS851FMyfOu6/bOAHD.D5HyQOR8j9j/P5RBCmNRw2"
 //Salting a password is very important - so the hash answer will always be different
 // salt is build in in the module
-// bcrypt.genSalt(10 , (err,salt)=>{
-//   bcrypt.hash(password,salt, (err , hash)=>{ //  we don't want to store the password, we want to store the hash in our database
-//     //console.log(hash);
-//   })
-// }) // The number - to prevent users from making to much request => hackers who try to find the right hash.
+bcrypt.genSalt(10 , (err,salt)=>{
+  bcrypt.hash(password,salt, (err , hash)=>{ //  we don't want to store the password, we want to store the hash in our database
+    //console.log(hash);
+  })
+}) // The number - to prevent users from making to much request => hackers who try to find the right hash.
 // Copare hash value and the original value - rerun true here - the res has the answer
 bcrypt.compare(password, hashpass, (err , res) =>{
   console.log(res);

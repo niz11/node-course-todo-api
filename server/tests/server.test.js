@@ -3,8 +3,10 @@ const expect = require('expect');
 const request = require('supertest');
 
 const {app} = require('./../server'); // server = server.js
-const {Todo} = require('./../models/todos');
+const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
 const {ObjectID} = require('mongodb');
+const {todos, populateTodos ,users , populateUsers} = require('./seed/seed')
 // // Assuming the database is empty! So we need to set before each - empty database
 // beforeEach((done)=>{ // Will remove all data from database before each test. before each "it"
 //   Todo.remove({}).then(()=>{
@@ -12,21 +14,10 @@ const {ObjectID} = require('mongodb');
 //   })
 // })
 
-const todos = [{
-  _id : new ObjectID(), // Adding manually id's to we can test Get todo/id
-  text: "First test todo"
-}, {
-  _id : new ObjectID(),
-  text: "second test todo",
-  completed: true,
-  completedAt: 22
-}];
 // SOem tests need to have data in database, so we build here a known to us database
-beforeEach((done)=>{
-  Todo.remove({}).then(()=>{
-    return Todo.insertMany(todos);
-  }).then(()=>done());
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
+
 
 
 describe('Post / todos' , ()=>{
@@ -196,3 +187,77 @@ describe("Update /todos/id" , ()=>{
 
   });
 });
+
+describe('For Get/users/me', () =>{
+  it('Should return user if authenticated', (done)=>{ // Adding done when it's asyncronize test
+    request(app)
+      .get('/users/me')
+      .set('x-auth', users[0].tokens[0].token) // Setting a header - From the user we created in the seed file
+      // Here stating to set athartions of what should happen -
+      .expect(200)
+      .expect((res) =>{
+        expect(res.body._id).toBe(users[0]._id.toHexString());
+        expect(res.body.email).toBe(users[0].email);
+      })
+      .end(done);
+  });
+
+  it('should return 401 if not authenticated', (done) => {
+    request(app)
+      .get('/users/me')
+      .expect(401)
+      .expect((res) => {
+        expect(res.body).toEqual({});
+      })
+      .end(done);
+  });
+});
+
+describe('POST /users' , () => {
+  it('Should create a user' , (done) => {
+    var email = 'ex@ex.com';
+    var pass = '123mnb!';
+
+    request(app)
+      .post('/users')
+      .send({email,pass})
+      .expect(200)
+      .expect((res) => { //Expectiong the the following functions doesn't throw any errors! + return what we expect
+        expect(res.headers['x-auth']).toExist(); //Header has a - in it, to we need to use ['']
+        expect(res.body._id).toExist();
+        expect(res.body.email).toBe(email);
+      })
+      .end((err) => { //Quering the Databse - checking that after the callsbackare finished - the data is saved in database
+        if (err)
+          return done(err);
+
+        User.findOne({email}).then((user) =>{ //Find the email in the database we just saved
+          expect(user).toExist(); // user should be saved in database
+          expect(user.password).toNotBe(pass); // Because the pass was hashed
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+  it('Should return validation error if request invalid' , (done) => {
+    var email = 'exex1.com';
+    var pass = '123';
+
+    request(app)
+      .post('/users')
+      .send({email, pass})
+      .expect(400)
+      .end(done);
+  });
+
+  it('Should not create user if user in Use' , (done) => {
+    var email = users[0].email;
+    var pass = '123456';
+
+    request(app)
+      .post('/users')
+      .send({email, pass})
+      .expect(400)
+      .end(done);
+  });
+})
