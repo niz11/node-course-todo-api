@@ -54,6 +54,19 @@ UserSchema.methods.generateAuthToken = function () {
   });
 };
 
+UserSchema.methods.removeToken = function (token) {
+  var user = this;
+  // Using here a mongodb method - $pull , that's lets you pull exactly what you want from the database
+
+  return user.update({ // return to chain promises
+    $pull: { // Will remove all the tokens from the tokes array, that matches the token
+      tokens:{
+        token:token
+      }
+    }
+  });
+};
+
 //Module method building here - finding user by token
 
 UserSchema.statics.findByToken = function (token){

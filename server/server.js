@@ -154,6 +154,17 @@ app.post('/users/me/login' , (req,res) => {
   });
 });
 
+// Logging out users by deleting their tokens from the database , They have to be authenticate to logout, and that's why we call here authenticate
+app.delete('/users/me/token' , authenticate , (req , res) =>{
+  var user = req.user;
+  var token = req.token;
+  user.removeToken(token).then(() =>{
+    res.status(200).send();
+  } , () => {
+    res.status(400).send();
+  });
+});
+
 app.listen(port , ()=>{
   console.log(`Started on port ${port}`);
 });
