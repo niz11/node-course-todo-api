@@ -307,3 +307,37 @@ describe('POST /users' , () => {
       });
    });
  });
+
+ describe('Delete users/me/token' , () => {
+   it('Should not remove unauturized user' , (done) => {
+     request(app)
+      .delete('/users/me/token')
+      .set('x-auth', users[0].tokens[0].token + 'abc')
+      .expect(401)
+      .end((err, res) =>{
+          if (err)
+            return done(err);
+          User.findById(users[0]._id).then((user) =>{
+            expect(user.tokens.length > 0);
+            done();
+          }).catch((e) => done(e));
+      });
+   });
+
+   it('Should remove token from the user' , (done) => {
+     request(app)
+      .delete('/users/me/token')
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(200)
+      .end((err, res) =>{
+          if (err)
+            return done(err);
+          User.findById(users[0]._id).then((user) =>{
+            expect(user.tokens.length == 0);
+            done();
+          }).catch((e) => done(e));
+      });
+   });
+
+
+ });
