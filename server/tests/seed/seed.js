@@ -12,7 +12,7 @@ const users = [{
   password: 'userOnePass',
   tokens: [{
     access: 'auth',
-    token: jwt.sign({_id: userOneId, access: 'auth'}, 'Niz1').toString()
+    token: jwt.sign({_id: userOneId, access: 'auth'}, process.env.JWT_SECRET).toString() //process.env.JWT_SECRET is congiged in config.json , just a value i save localy amd not uploadind to git or heroku
   }]
 }, {
   _id: userTwoId,
@@ -20,7 +20,7 @@ const users = [{
   password: 'userTwoPass',
   tokens: [{
     access: 'auth',
-    token: jwt.sign({_id: userTwoId, access: 'auth'}, 'Niz1').toString()
+    token: jwt.sign({_id: userTwoId, access: 'auth'}, process.env.JWT_SECRET).toString()
   }]
 }];
 

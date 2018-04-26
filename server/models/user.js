@@ -46,7 +46,7 @@ UserSchema.methods.toJSON = function (){
 UserSchema.methods.generateAuthToken = function () {
   var user = this;
   var access = 'auth';
-  var token = jwt.sign({_id: user._id.toHexString(), access},'Niz1').toString();
+  var token = jwt.sign({_id: user._id.toHexString(), access},process.env.JWT_SECRET).toString();
 
   user.tokens = user.tokens.concat([{access,token}]);  //local changed
   return user.save().then(()=>{ //saving in database , and adding to it an error function - user.save return a promise
@@ -73,7 +73,7 @@ UserSchema.statics.findByToken = function (token){
   var User = this;
   var decoded;
   try{
-    decoded = jwt.verify(token, 'Niz1'); // Putting it in try catch block because if the values doesn't match the jwt.verify throughs an error
+    decoded = jwt.verify(token, process.env.JWT_SECRET); // Putting it in try catch block because if the values doesn't match the jwt.verify throughs an error
   } catch(e){
     // return new Promise((res,rej) =>  {
     //    reject()
