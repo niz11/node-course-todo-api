@@ -17,17 +17,23 @@ const users = [{
 }, {
   _id: userTwoId,
   email: 'jen@example.com',
-  password: 'userTwoPass'
+  password: 'userTwoPass',
+  tokens: [{
+    access: 'auth',
+    token: jwt.sign({_id: userTwoId, access: 'auth'}, 'Niz1').toString()
+  }]
 }];
 
 const todos = [{
   _id : new ObjectID(), // Adding manually id's to we can test Get todo/id
-  text: "First test todo"
+  text: "First test todo",
+  _creator : userOneId
 }, {
   _id : new ObjectID(),
   text: "second test todo",
   completed: true,
-  completedAt: 22
+  completedAt: 22 ,
+  _creator : userTwoId
 }];
 // SOem tests need to have data in database, so we build here a known to us database
 const populateTodos = (done) => {

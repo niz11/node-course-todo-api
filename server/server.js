@@ -20,23 +20,28 @@ const port = process.env.PORT; //|| 3000 ; - no need because we configed it in t
 app.use(bodyParser.json()); // can Send json to our app now
 // Crud - creat ,read , update and delete
 
-// Creat new todo
-app.post('/todos', (req,res)=>{
+// Creat new todo - authenticate makes it a private route
+app.post('/todos', authenticate, (req, res) => {
+  //console.log(req);
   var todo = new Todo({
-    text: req.body.text
-  })
-  todo.save().then((doc)=>{
-    res.send(doc);
-  }, (e) =>{
-    res.status(400).send(e);
+    text: req.body.text,
+    _creator: req.user._id
   });
 
+  todo.save().then((doc) => {
+    res.send(doc);
+  }, (e) => {
+    res.status(400).send(e);
+  });
+});
 // // If I send a post usl from user, I'll get in the termial what json file I wrote and sent in postman
 //   console.log(req.body);
-});
 
-app.get('/todos', (req,res)=>{
-  Todo.find().then((todos)=>{
+
+app.get('/todos', authenticate , (req,res)=>{
+  Todo.find({
+      _creator: req.user._id
+    }).then((todos)=>{
     res.send({
       todos // It's got not sending todos as an array! we send it as an object, and in the future we can work with it.
     });
@@ -46,12 +51,15 @@ app.get('/todos', (req,res)=>{
 })
 
 // Chalange - get by id
-app.get('/todos/:id', (req,res)=>{
+app.get('/todos/:id',authenticate,  (req,res)=>{
   var id = req.params.id;
   if (!ObjectID.isValid(id))
       return res.status(404).send();
-
-  Todo.findById(id).then((todos)=>{
+//Todo.findById(id) - would have let other users see data from atother users by only inserting their id
+  Todo.findOne({
+    _id: id,
+    _creator: req.user._id
+  }).then((todos)=>{
     if (!todos)
       return res.status(404).send();
     res.send({
@@ -63,12 +71,15 @@ app.get('/todos/:id', (req,res)=>{
 })
 
 // Chalange - delete by id
-app.delete('/todos/:id', (req,res)=>{
+app.delete('/todos/:id', authenticate, (req,res)=>{
   var id = req.params.id;
   if (!ObjectID.isValid(id))
       return res.status(404).send();
 
-  Todo.findByIdAndRemove(id).then((todos)=>{
+  Todo.findOneAndRemove({
+    _id: id ,
+    _creator : req.user._id
+  }).then((todos)=>{
     if (!todos)
       return res.status(404).send();
     res.send({
@@ -80,7 +91,7 @@ app.delete('/todos/:id', (req,res)=>{
 })
 
 //Update by id - a bit harder - need to check the request from the user and update the right values
-app.patch ('/todos/:id', (req,res)=>{
+app.patch ('/todos/:id',authenticate , (req,res)=>{
     var id = req.params.id;
     var body = _.pick(req.body , ['text'  , 'completed']); // choosing the values the uuser can upadte- not all. pulling of array of properties if they exsists
 
@@ -94,7 +105,10 @@ app.patch ('/todos/:id', (req,res)=>{
       body.completedAt = null;
     }
 
-    Todo.findByIdAndUpdate(id , {$set : body}, {new: true}).then((todo)=>{ //$set and new are mongoo values that I have to use
+    Todo.findOneAndUpdate({
+      _id: id ,
+      _creator: req.user._id
+    }, {$set : body}, {new: true}).then((todo)=>{ //$set and new are mongoo values that I have to use
       if (!todo)
         return res.status(404).send();
 

@@ -14,6 +14,10 @@ var Todo = mongoose.model('Todo', {
   completedAt: {
     type: Number ,
     default: null
+  },
+  _creator: { //MAking sure that each user has his own private todos
+    type: mongoose.Schema.Types.ObjectId , // definig here an object id
+    require: true // Only login users would be able to create a todo
   }
 });
 
