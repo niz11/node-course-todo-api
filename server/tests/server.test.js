@@ -138,7 +138,7 @@ describe("Delete /todos/id" , ()=>{
           return done(err);
         }
         Todo.findById(hexId).then((todos)=>{ // Brings back an array with all the todos
-          expect(todos).toNotExist();
+          expect(todos).toBeFalsy();
           done(); // Will pass the tests any way, that's why i need to add a catch
         }).catch((e)=>{
           done(e);
@@ -157,7 +157,7 @@ describe("Delete /todos/id" , ()=>{
           return done(err);
         }
         Todo.findById(hexId).then((todos)=>{ // Brings back an array with all the todos
-          expect(todos).toExist(); //Should not remove this todo since the user is not authorized
+          expect(todos).toBeTruthy(); //Should not remove this todo since the user is not authorized
           done(); // Will pass the tests any way, that's why i need to add a catch
         }).catch((e)=>{
           done(e);
@@ -199,7 +199,8 @@ describe("Update /todos/id" , ()=>{
           .expect((res)=>{
             expect(res.body.todo.text).toBe(text);
             expect(res.body.todo.completed).toBe(true);
-            expect(res.body.todo.completedAt).toBeA('number');
+            //expect(res.body.todo.completedAt).toBeA('number'); Doesn't exist in the new version of expect
+            expect(typeof res.body.todo.completedAt).toBe('number');
           })
           .end(done);
   });
@@ -234,7 +235,7 @@ describe("Update /todos/id" , ()=>{
           .expect((res)=>{
             expect(res.body.todo.text).toBe(text);
             expect(res.body.todo.completed).toBe(false);
-            expect(res.body.todo.completedAt).toNotExist();
+            expect(res.body.todo.completedAt).toBeFalsy();
           })
           .end(done);
 
@@ -276,8 +277,8 @@ describe('POST /users' , () => {
       .send({email,pass})
       .expect(200)
       .expect((res) => { //Expectiong the the following functions doesn't throw any errors! + return what we expect
-        expect(res.headers['x-auth']).toExist(); //Header has a - in it, to we need to use ['']
-        expect(res.body._id).toExist();
+        expect(res.headers['x-auth']).toBeTruthy(); //Header has a - in it, to we need to use ['']
+        expect(res.body._id).toBeTruthy();
         expect(res.body.email).toBe(email);
       })
       .end((err) => { //Quering the Databse - checking that after the callsbackare finished - the data is saved in database
@@ -285,8 +286,8 @@ describe('POST /users' , () => {
           return done(err);
 
         User.findOne({email}).then((user) =>{ //Find the email in the database we just saved
-          expect(user).toExist(); // user should be saved in database
-          expect(user.password).toNotBe(pass); // Because the pass was hashed
+          expect(user).toBeTruthy(); // user should be saved in database
+          expect(user.password).not.toBe(pass); // Because the pass was hashed
           done();
         }).catch((e) => done(e));
       });
@@ -324,13 +325,13 @@ describe('POST /users' , () => {
       })
       .expect(200)
       .expect((res) =>{ //custom expect function we make
-        expect(res.header['x-auth']).toExist();
+        expect(res.header['x-auth']).toBeTruthy();
       })
       .end((err,res) =>{ //quering the database
         if (err)
           return done(err);
         User.findById(users[1]._id).then((user) =>{
-          expect(user.tokens[1]).toInclude({ //Make sure the created user has! a token values, doesn't matter which
+          expect(user.toObject().tokens[1]).toMatchObject({ //Make sure the created user has! a token values, doesn't matter which
             access: 'auth' ,
             token: res.headers['x-auth']
           });
@@ -348,7 +349,7 @@ describe('POST /users' , () => {
       })
       .expect(400)
       .expect((res) =>{ //custom expect function we make
-        expect(res.header['x-auth']).toNotExist();
+        expect(res.header['x-auth']).toBeFalsy();
       })
       .end((err,res) =>{ //quering the database
         if (err)
